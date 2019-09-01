@@ -5,19 +5,19 @@ Python 3.7
 
 7zip 
 
-make sure 7zip and python are added to your PATH
+Make sure 7zip and python are added to your PATH
 
 ### Installation
 
-download or clone the Secure Coding app
-open cmd and go to the project directory
-install virtualenv and create a virtual environment
+Download or clone the Secure Coding app  
+Open cmd and go to the project directory  
+Install virtualenv and create a virtual environment  
 
 ```
 pip install virtualenv
 virtualenv venv
 ```
-activate the virtual environment
+Activate the virtual environment
 ```
 venv\Scripts\activate
 ```
