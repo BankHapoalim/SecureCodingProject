@@ -11,8 +11,8 @@ from werkzeug.urls import url_parse
 from .myutils import check_user
 import base64
 import os, logging, tempfile
-
-
+from flask import jsonify
+import json
 
 
 @app.route('/')
@@ -74,6 +74,19 @@ def uploadCheck():
     form = UploadCheckForm()
     return render_template('upload_check.html', title='Upload a Check', form=form)
 
+@app.route("/ajax/check_status", methods=["POST"])
+def ajax_check_status():
+    user = check_user(request)
+    if not user:
+        return redirect(url_for('login'))
+
+    list_checks_tuple = []
+    check_ids = request.form.getlist("check_ids[]")
+    for id in check_ids:
+        check = Check.query.filter_by(id=int(id)).first()
+        list_checks_tuple.append((id, check.status, check.user_id, check.amount))
+    return jsonify(json.dumps(list_checks_tuple))
+
 
 @app.route("/handleUploadCheck", methods=['POST'])
 
@@ -126,7 +139,7 @@ def getCheckStatus():
     form = GetCheckStatusForm()
     check_id = request.args.get('check_id', None)
     if check_id:
-        check = Check.query.filter_by(id=check_id).first()
+        check = Check.query.filter_by(id=check_id, user_id=user.id).first()
         if check is None:
             flash('Check with ID ' + str(check_id) + ' not found')
             return redirect(url_for('getCheckStatus'))
