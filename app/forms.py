@@ -38,3 +38,8 @@ class UploadCheckForm(FlaskForm):
 class GetCheckStatusForm(FlaskForm):
     check_id = IntegerField('Check ID', validators=[DataRequired()])
     submit = SubmitField('Check Status')
+
+class DeleteCheckForm(FlaskForm):
+    check_id = IntegerField('Check ID', validators=[DataRequired()])
+    submit = SubmitField('Delete Check')
+

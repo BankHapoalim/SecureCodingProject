@@ -1,6 +1,6 @@
 from flask import render_template, flash, redirect, url_for, make_response, Flask
 from app import app, db
-from app.forms import LoginForm, UploadCheckForm, GetCheckStatusForm, RegistrationForm
+from app.forms import LoginForm, UploadCheckForm, GetCheckStatusForm, RegistrationForm, DeleteCheckForm
 # from flask_login import current_user
 # from flask_login import login_required
 from flask_login import login_user
@@ -146,3 +146,21 @@ def getCheckStatus():
         flash('Check with ID ' + str(check_id) + ' found. Amount - ' + str(check.amount) +
               '. Message - ' + check.message + '. Status - ' + check.status)
     return render_template('get_check_status.html', title='Get Check Status', form=form)
+
+
+@app.route("/deleteCheck", methods=['GET', 'POST'])
+def deleteCheck():
+    user = check_user(request)
+    if not user:
+        return redirect(url_for('login'))
+    form = DeleteCheckForm()
+    check_id = form.check_id.data
+    if check_id:
+        check = Check.query.filter_by(id=check_id, user_id=user.id).first()
+        if check is None:
+            flash('Check with ID ' + str(check_id) + ' not found')
+            return redirect(url_for('deleteCheck'))
+        db.session.delete(check)
+        db.session.commit()
+        flash('Check with ID ' + str(check_id) + ' deleted.')
+    return render_template('delete_check.html', title='Delete Check', form=form)
