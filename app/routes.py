@@ -139,7 +139,7 @@ def getCheckStatus():
     form = GetCheckStatusForm()
     check_id = request.args.get('check_id', None)
     if check_id:
-        check = Check.query.filter_by(id=check_id, user_id=user.id).first()
+        check = Check.query.filter_by(id=check_id).first()
         if check is None:
             flash('Check with ID ' + str(check_id) + ' not found')
             return redirect(url_for('getCheckStatus'))
