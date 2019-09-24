@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+            <div class="card card-signin my-5">
+                <div class="card-body">
+
+
+                    <h1 class="card-title text-center">Upload a Digitally-Signed Check</h1>
+                    <form action="/uploadDigitallySignedCheck" method="post" enctype="multipart/form-data">
+                        Browse (chk): <BR>
+                        {{form.signedCheck}}
+                        <input type="submit" class="btn btn-primary" value="Upload"/>
+                        </p>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

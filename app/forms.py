@@ -34,6 +34,8 @@ class UploadCheckForm(FlaskForm):
     amount = FloatField('Amount', validators=[DataRequired()])
     message = StringField('Message', validators=[DataRequired()])
 
+class UploadDigitallySignedCheckForm(FlaskForm):
+    signedCheck = FileField('Signed Check File', validators=[DataRequired()])
 
 class GetCheckStatusForm(FlaskForm):
     check_id = IntegerField('Check ID', validators=[DataRequired()])

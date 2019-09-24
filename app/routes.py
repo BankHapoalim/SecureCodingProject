@@ -1,6 +1,6 @@
 from flask import render_template, flash, redirect, url_for, make_response, Flask
 from app import app, db
-from app.forms import LoginForm, UploadCheckForm, GetCheckStatusForm, RegistrationForm, DeleteCheckForm
+from app.forms import LoginForm, UploadCheckForm, GetCheckStatusForm, RegistrationForm, DeleteCheckForm, UploadDigitallySignedCheckForm
 # from flask_login import current_user
 # from flask_login import login_required
 from flask_login import login_user
@@ -13,6 +13,8 @@ import base64
 import os, logging, tempfile
 from flask import jsonify
 import json
+import pickle
+import io
 
 
 @app.route('/')
@@ -128,6 +130,31 @@ def handleUploadCheck():
                     app.logger.debug('running on linux or mac')
 
     return redirect(url_for('uploadCheck'))
+
+@app.route("/uploadDigitallySignedCheck", methods=['POST', 'GET'])
+
+def uploadDigitallySignedCheck():
+    user = check_user(request)
+    if not user:
+        return redirect(url_for('login'))
+    app.logger.info('uploadDigitallySignedCheck')
+    form = UploadDigitallySignedCheckForm()
+    if form.is_submitted():
+        checkBytes = io.BytesIO()
+        form.signedCheck.data.save(checkBytes)
+        signedCheck = None
+        try:
+            signedCheck = pickle.loads(checkBytes.getbuffer())
+        except pickle.UnpicklingError as error:
+            flash('Failed deserializing check. Error - ' + str(error))
+            return render_template('upload_digital_check.html', title='Upload a Digitally-Signed Check', form=form)
+        db.session.add(signedCheck)
+        db.session.commit()
+        flash('Check Uploaded Successfully!')
+
+
+    return render_template('upload_digital_check.html', title='Upload a Digitally-Signed Check', form=form)
+
 
 
 @app.route("/getCheckStatus", methods=['GET', 'POST'])
