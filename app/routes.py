@@ -18,12 +18,12 @@ import os, logging, tempfile
 @app.route('/')
 @app.route('/index')
 def index():
-    user = check_user(request)
+    #user = check_user(request)
     if not user:
         return redirect(url_for('login'))
     return render_template('index.html', title='Home', user=user, checks=user.checks)
-
-
+'''
+'''
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -88,32 +88,34 @@ def handleUploadCheck():
         password = form.password
         logging.debug('received file name: %s password: %s' % (photo.data.filename, password))
         if photo.data.filename != '':
-            if os.name == 'nt':
-                app.logger.debug('running on windows')
-                temp_dir = tempfile.mkdtemp()
-                path = os.path.join(temp_dir, photo.data.filename)
-                app.logger.debug('saving file to %s' % path)
-                photo.data.save(path)
+            app.logger.debug('running on windows')
+            temp_dir = tempfile.mkdtemp()
+            path = os.path.join(temp_dir, photo.data.filename)
+            app.logger.debug('saving file to %s' % path)
+            photo.data.save(path)
 
-                check = Check(photo=path, amount=form.amount.data, status="Pending", message=form.message.data,
-                              user=user)
-                db.session.add(check)
-                db.session.commit()
+            check = Check(photo=path, amount=form.amount.data, status="Pending", message=form.message.data,
+                          user=user)
+            db.session.add(check)
+            db.session.commit()
 
-                app.logger.debug('check added. id = ' + str(check.id))
+            app.logger.debug('check added. id = ' + str(check.id))
 
-                flash('check added. id = ' + str(check.id))
+            flash('check added. id = ' + str(check.id))
 
-                if '.zip' in photo.data.filename:
-                    app.logger.debug('zip file uploaded')
+            if '.zip' in photo.data.filename:
+                app.logger.debug('zip file uploaded')
+                if os.name == 'nt':
                     cmd = '7z x "%s"' % path
                     if password.data != '':
                         cmd += ' -p"%s"' % password.data
-                    app.logger.debug('running command %s' % cmd)
-                    os.system(cmd)
                 else:
-                    app.logger.debug('running on linux or mac')
-
+                    cmd = 'unzip x "%s"' % path
+                    if password.data != '':
+                        cmd += ' -P "%s"' % password.data
+                app.logger.debug('running command %s' % cmd)
+                os.system(cmd)
+            
     return redirect(url_for('uploadCheck'))
 
 
