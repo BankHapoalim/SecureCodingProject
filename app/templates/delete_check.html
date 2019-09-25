@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-9 col-md-7 col-lg-5 mx-auto">
+            <div class="card card-signin my-5">
+                <div class="card-body">
+
+                    <h1 class="card-title text-center">Delete Check</h1>
+                    <form action="" method="post">
+                        <p>
+                            {{ form.check_id.label }}<br>
+                            {{ form.check_id(size=32) }}<br>
+                            {% for error in form.check_id.errors %}
+                            <span style="color: red;">[{{ error }}]</span>
+                            {% endfor %}
+                        </p>
+                        <input type="submit" value="Delete" class="btn btn-primary">
+
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

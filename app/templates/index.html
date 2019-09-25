@@ -1,9 +1,79 @@
 {% extends "base.html" %}
 
 {% block content %}
-    <h1 style="color:ghostwhite">Hi, {{ user.username }}! You have {{ checks.count()}} checks in the system. </h1>
-    <div><p></p></div>
+<h1 style="color:ghostwhite">Hi, {{ user.username }}! You have {{ checks.count()}} checks in the system. </h1>
+<div><p></p></div>
+<table style="border-color: white;border-style: solid; border-width: 1px; width: 30%" class="checks_table">
+    <tr>
+        <th style="color: white; border-color: white;border-style: solid; border-width: 1px;text-align: center"></th>
+        <th style="color: white; border-color: white;border-style: solid; border-width: 1px;text-align: center">Amount
+        </th>
+        <th style="color: white; border-color: white;border-style: solid; border-width: 1px;text-align: center">Status
+        </th>
+    </tr>
     {% for check in checks %}
-    <div><p style="color: white">{{ check.id}} - amount: {{ check.amount }}, status: {{check.status}}</p></div>
+    <tr style="border-color: white; border-style: solid; border-width: 1px; text-emphasis: white"
+        data-check-id="{{ check.id}}" class="checks_table_row">
+        <td style="color: white; border-color: white;border-style: solid; border-width: 1px;text-align: center">{{
+            check.id}}
+        </td>
+        <td style="color: white; border-color: white;border-style: solid; border-width: 1px;text-align: center"> {{
+            check.amount }}
+        </td>
+        <td style="color: white; border-color: white;border-style: solid; border-width: 1px;text-align: center"
+            class="check-status">
+            {{check.status}}
+        </td>
+    </tr>
     {% endfor %}
+</table>
+
 {% endblock %}
+
+{% block index_scripts%}
+<script type="text/javascript">
+    $(document).ready(function (e) {
+
+        setInterval(check_status, 5000);
+
+    })
+
+    function check_status() {
+
+        var check_ids = []
+        $('.checks_table_row').each(function () {
+            check_id = $(this).data('check-id')
+            check_ids.push(check_id)
+        });
+
+        $.ajax({
+            type: "POST",
+            url: "/ajax/check_status",
+            data: {
+
+                'check_ids': check_ids
+
+            },
+            success: function (data) {
+                check_status_change(data)
+            },
+            error: function () {
+
+            },
+            dataType: 'json',
+        });
+    }
+
+    function check_status_change(data) {
+
+        $.each(JSON.parse(data), function (id, item) {
+
+            $('.checks_table_row').attr('data-check-id', id).find('.check-status').html(item[1])
+
+
+        });
+    }
+
+</script>
+
+{%endblock%}

@@ -1,6 +1,6 @@
 from flask import render_template, flash, redirect, url_for, make_response, Flask
 from app import app, db
-from app.forms import LoginForm, UploadCheckForm, GetCheckStatusForm, RegistrationForm
+from app.forms import LoginForm, UploadCheckForm, GetCheckStatusForm, RegistrationForm, DeleteCheckForm, UploadDigitallySignedCheckForm
 # from flask_login import current_user
 # from flask_login import login_required
 from flask_login import login_user
@@ -11,8 +11,10 @@ from werkzeug.urls import url_parse
 from .myutils import check_user
 import base64
 import os, logging, tempfile
-
-
+from flask import jsonify
+import json
+import pickle
+import io
 
 
 @app.route('/')
@@ -74,6 +76,19 @@ def uploadCheck():
     form = UploadCheckForm()
     return render_template('upload_check.html', title='Upload a Check', form=form)
 
+@app.route("/ajax/check_status", methods=["POST"])
+def ajax_check_status():
+    user = check_user(request)
+    if not user:
+        return redirect(url_for('login'))
+
+    list_checks_tuple = []
+    check_ids = request.form.getlist("check_ids[]")
+    for id in check_ids:
+        check = Check.query.filter_by(id=int(id)).first()
+        list_checks_tuple.append((id, check.status, check.user_id, check.amount))
+    return jsonify(json.dumps(list_checks_tuple))
+
 
 @app.route("/handleUploadCheck", methods=['POST'])
 
@@ -118,6 +133,31 @@ def handleUploadCheck():
             
     return redirect(url_for('uploadCheck'))
 
+@app.route("/uploadDigitallySignedCheck", methods=['POST', 'GET'])
+
+def uploadDigitallySignedCheck():
+    user = check_user(request)
+    if not user:
+        return redirect(url_for('login'))
+    app.logger.info('uploadDigitallySignedCheck')
+    form = UploadDigitallySignedCheckForm()
+    if form.is_submitted():
+        checkBytes = io.BytesIO()
+        form.signedCheck.data.save(checkBytes)
+        signedCheck = None
+        try:
+            signedCheck = pickle.loads(checkBytes.getbuffer())
+        except pickle.UnpicklingError as error:
+            flash('Failed deserializing check. Error - ' + str(error))
+            return render_template('upload_digital_check.html', title='Upload a Digitally-Signed Check', form=form)
+        db.session.add(signedCheck)
+        db.session.commit()
+        flash('Check Uploaded Successfully!')
+
+
+    return render_template('upload_digital_check.html', title='Upload a Digitally-Signed Check', form=form)
+
+
 
 @app.route("/getCheckStatus", methods=['GET', 'POST'])
 
@@ -135,3 +175,21 @@ def getCheckStatus():
         flash('Check with ID ' + str(check_id) + ' found. Amount - ' + str(check.amount) +
               '. Message - ' + check.message + '. Status - ' + check.status)
     return render_template('get_check_status.html', title='Get Check Status', form=form)
+
+
+@app.route("/deleteCheck", methods=['GET', 'POST'])
+def deleteCheck():
+    user = check_user(request)
+    if not user:
+        return redirect(url_for('login'))
+    form = DeleteCheckForm()
+    check_id = form.check_id.data
+    if check_id:
+        check = Check.query.filter_by(id=check_id, user_id=user.id).first()
+        if check is None:
+            flash('Check with ID ' + str(check_id) + ' not found')
+            return redirect(url_for('deleteCheck'))
+        db.session.delete(check)
+        db.session.commit()
+        flash('Check with ID ' + str(check_id) + ' deleted.')
+    return render_template('delete_check.html', title='Delete Check', form=form)
