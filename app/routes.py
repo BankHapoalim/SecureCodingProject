@@ -20,7 +20,7 @@ import io
 @app.route('/')
 @app.route('/index')
 def index():
-    #user = check_user(request)
+    user = check_user(request)
     if not user:
         return redirect(url_for('login'))
     return render_template('index.html', title='Home', user=user, checks=user.checks)
