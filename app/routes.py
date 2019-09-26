@@ -106,7 +106,7 @@ def handleUploadCheck():
             app.logger.debug('running on windows')
             temp_dir = tempfile.mkdtemp()
             path = os.path.join(temp_dir, photo.data.filename)
-            app.logger.debug('saving file to %s' % path)
+            flash('saving file to %s' % path)
             photo.data.save(path)
 
             check = Check(photo=path, amount=form.amount.data, status="Pending", message=form.message.data,
